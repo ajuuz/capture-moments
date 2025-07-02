@@ -1,13 +1,16 @@
 import { Ref } from "react"
 
 type Prop={
-    photoURL:string|null,
+    mode:'capture'|'view',
+    setMode:React.Dispatch<React.SetStateAction<'capture'|'view'>>
     videoRef:Ref<HTMLVideoElement>,
+    lastTakenPhoto:Blob,
     handleCapture:()=>void
 }
-const BeforeCapture = ({photoURL,videoRef,handleCapture}:Prop) => {
+const BeforeCapture = ({mode,setMode,videoRef,lastTakenPhoto,handleCapture}:Prop) => {
+    console.log(lastTakenPhoto)
   return (
-    <div className={`${photoURL?'hidden':'block'} h-full w-full flex flex-col justify-center items-center relative overflow-hidden`}>
+    <div  className={`${mode==='capture'?'block':'hidden'} h-full w-full flex flex-col justify-center items-center relative overflow-hidden`}>
       <video autoPlay playsInline  className='absolute top-0 left-0 w-full h-full object-cover' ref={videoRef}/>
 
       <div className='absolute bottom-10 z-10' onClick={handleCapture}>
@@ -16,7 +19,8 @@ const BeforeCapture = ({photoURL,videoRef,handleCapture}:Prop) => {
         </div>
       </div>
 
-      <div className='p-9 rounded-md bg-white absolute bottom-10 right-5'>
+      <div onClick={()=>setMode('view')} className='rounded-md bg-white w-25 overflow-hidden absolute bottom-10 right-5'>
+        {lastTakenPhoto && <img src={URL.createObjectURL(lastTakenPhoto)}  className=""/>}
       </div>
     </div>
   )

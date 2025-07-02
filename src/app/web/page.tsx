@@ -2,21 +2,22 @@
 
 import AfterCapture from '@/component/webcamComponent/AfterCapture';
 import BeforeCapture from '@/component/webcamComponent/BeforeCapture';
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 
 const WebCam:React.FC= () => {
-  const [photoURL,setPhotoURL]=useState<string|null>(null)
-  const [lastPhotos,setLastPhotos]=useState<Blob[]>([])
+  const [currentPhotoIndex,setCurrentPhotoIndex]=useState<number>(-1)
+  const [mode,setMode]=useState<'capture'|'view'>('capture')
+  const [takenPhotos,setTakenPhotos]=useState<Blob[]>([])
   const videoRef = useRef<HTMLVideoElement|null>(null)
   const imageCaptureRef = useRef<any>(null)
 
   useEffect(()=>{
-    if(!photoURL){
+    if(mode==='capture'){
       startCamera()
     }else{
       stopCamera()
     }
-  },[photoURL])
+  },[mode])
 
   
   const startCamera=()=>{
@@ -49,32 +50,37 @@ const WebCam:React.FC= () => {
     try{
       const blob =await imageCaptureRef.current.takePhoto();
       console.log(blob);
-      const url = URL.createObjectURL(blob)
-      setPhotoURL(url)
-      stopCamera()
+      setTakenPhotos((prev)=>[...prev,blob])
+      setCurrentPhotoIndex(prev=>prev+1);
     }
     catch(error){
         console.error('Error taking photo:', error);
     }
   }
 
-  const handlePhotoSelect= (event:React.ChangeEvent<HTMLInputElement>) => {
-      if(!event.target.files) return
+  // const handlePhotoSelect= (event:React.ChangeEvent<HTMLInputElement>) => {
+  //     if(!event.target.files) return
 
-      const file = event.target.files[0];
-      if (file) {
-        const imageURL = URL.createObjectURL(file);
-        // Preview or upload the image
-         setPhotoURL(imageURL)
-        console.log(file);
-      }
-};
+  //     const file = event.target.files[0];
+  //     if (file) {
+  //       const imageURL = URL.createObjectURL(file);
+  //       setTakenPhotos((prev)=>[...prev,imageURL])
+  //       // Preview or upload the image
+  //       console.log(file);
+  //     }
+  // };
+
+  const lastTakenPhoto=useMemo(()=>{
+    console.log(currentPhotoIndex)
+    console.log(takenPhotos[currentPhotoIndex])
+    return takenPhotos[currentPhotoIndex]
+  },[takenPhotos.length])
 
 
   return (
     <div  className='bg-white w-screen h-screen flex flex-col items-center justify-center'>
-      <BeforeCapture photoURL={photoURL} videoRef={videoRef} handleCapture={handleCapture}/>
-      <AfterCapture photoURL={photoURL} setPhotoURL={setPhotoURL}/>
+      <BeforeCapture mode={mode} setMode={setMode} videoRef={videoRef} handleCapture={handleCapture} lastTakenPhoto={lastTakenPhoto}/>
+      <AfterCapture mode={mode} setMode={setMode} takenPhotos={takenPhotos} currentPhotoIndex={currentPhotoIndex} setCurrentPhotoIndex={setCurrentPhotoIndex}/>
     </div>
   )
 }
